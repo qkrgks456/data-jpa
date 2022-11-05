@@ -16,6 +16,7 @@ public class Member {
     @GeneratedValue
     @Column(name = "member_id")
     private Long id;
+    @Setter
     private String username;
     private int age;
 
