@@ -13,7 +13,7 @@ import javax.persistence.QueryHint;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
 
@@ -39,7 +39,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query(value = "select m from Member m left join Team t", countQuery = "select count(m) from Member m")
     Page<Member> findByAge(int age, Pageable pageable);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true) // bulk 수정 쿼리시 이거 사용 수정만 할꺼면 상관없는데 추후에 로직이 더 있으면 clear 해줘야 한다
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
 
@@ -47,14 +47,16 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findMemberFetchJoin();
 
     @Override
-    @EntityGraph(attributePaths = {"team"}) // 패치조인 대용 옴총 편안 @Query 사용 가능
+    @EntityGraph(attributePaths = {"team"})
+        // 패치조인 대용 편안 @Query 사용 가능
     List<Member> findAll();
 
     // 변경감지 스냅샷을 안 만듬 사실 실제 서비스 성능에 크게 영향을 주지 않음 트래픽이 큰 일부 api에 사용하자
     @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
     Member findReadOnlyByUsername(String username);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE) // lock 관련도 가능하다는것 정도 트랜잭션과 lock
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+        // lock 관련도 가능하다는것 정도 트랜잭션과 lock
     List<Member> findLockByUsername(String username);
 
 
